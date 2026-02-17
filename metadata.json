@@ -1,0 +1,7 @@
+{
+  "name": "Manuteção Ayres - Gestão Profissional de Manutenções",
+  "description": "Aplicativo completo para controle de manutenções preventivas e corretivas com notificações inteligentes, histórico e relatórios detalhados.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
