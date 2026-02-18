@@ -1,5 +1,5 @@
 {
-  "name": "manuteção-ayres---gestão-profissional-de-manutenções",
+  "name": "tudo-em-dia---gestão-profissional-de-manutenções",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -13,7 +13,9 @@
     "lucide-react": "^0.574.0",
     "react-dom": "^19.2.4",
     "@google/genai": "^1.41.0",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

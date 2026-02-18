@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { MaintenanceRecord, Periodicity, CategoryDefinition } from '../types';
 import { Icons } from '../constants';
-import { loadCategories, formatDateTime } from '../utils/helpers';
+import { loadCategories } from '../utils/helpers';
 
 interface MaintenanceFormProps {
   onSave: (record: Partial<MaintenanceRecord>) => void;
@@ -85,7 +85,7 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSave, onCancel, ini
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700">Última Realização *</label>
+              <label className="block text-sm font-semibold text-slate-700">Data da Manutenção *</label>
               <input type="date" value={formData.lastDate} onChange={e => setFormData({ ...formData, lastDate: e.target.value })} className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none" required />
             </div>
 

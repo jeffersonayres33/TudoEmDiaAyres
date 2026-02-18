@@ -56,7 +56,9 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, records, 
     return usedCategoryNames.has(categoryName.trim().toLowerCase());
   };
 
-  const handleDeleteClick = (cat: CategoryDefinition) => {
+  const handleDeleteClick = (e: React.MouseEvent, cat: CategoryDefinition) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (checkInUse(cat.name)) {
       alert(`Não é possível excluir a categoria "${cat.name}" porque existem manutenções vinculadas a ela.`);
       return;
@@ -107,7 +109,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, records, 
                   <Icons.FileText className="w-4 h-4" />
                 </button>
                 <button 
-                  onClick={() => handleDeleteClick(cat)}
+                  onClick={(e) => handleDeleteClick(e, cat)}
                   className={`p-2 rounded-lg transition-all ${inUse ? 'text-slate-200 cursor-not-allowed opacity-50' : 'text-slate-400 hover:text-red-600 hover:bg-red-50'}`}
                   title={inUse ? "Categoria em uso" : "Excluir"}
                 >

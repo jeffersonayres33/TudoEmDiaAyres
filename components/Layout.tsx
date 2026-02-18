@@ -9,9 +9,19 @@ interface LayoutProps {
   setActiveTab: (tab: string) => void;
   onNewMaintenance: () => void;
   notifications: MaintenanceNotification[];
+  canInstall?: boolean;
+  onInstall?: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onNewMaintenance, notifications }) => {
+const Layout: React.FC<LayoutProps> = ({ 
+  children, 
+  activeTab, 
+  setActiveTab, 
+  onNewMaintenance, 
+  notifications,
+  canInstall,
+  onInstall
+}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
@@ -29,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onNe
         <div className="p-6 border-b border-slate-100">
           <h1 className="text-xl font-bold text-blue-600 flex items-center gap-2">
             <Icons.CheckCircle2 className="w-6 h-6" />
-            MaintTrack
+            TudoEmDia
           </h1>
         </div>
         
@@ -50,7 +60,16 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onNe
           ))}
         </nav>
 
-        <div className="p-4">
+        <div className="p-4 space-y-3">
+          {canInstall && (
+            <button 
+              onClick={onInstall}
+              className="install-button w-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all hover:bg-emerald-100 active:scale-95 text-xs"
+            >
+              <Icons.Download className="w-4 h-4" />
+              Instalar Aplicativo
+            </button>
+          )}
           <button 
             onClick={onNewMaintenance}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-95"
@@ -67,13 +86,22 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, onNe
           <div className="md:hidden">
             <h1 className="text-lg font-bold text-blue-600 flex items-center gap-2">
               <Icons.CheckCircle2 className="w-6 h-6" />
-              MaintTrack
+              TudoEmDia
             </h1>
           </div>
           <div className="hidden md:block"></div>
 
           <div className="flex items-center gap-4">
-            {/* Notification Bell */}
+            {canInstall && (
+              <button 
+                onClick={onInstall}
+                className="md:hidden install-button flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold"
+              >
+                <Icons.Download className="w-3.5 h-3.5" />
+                Instalar
+              </button>
+            )}
+
             <div className="relative">
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}

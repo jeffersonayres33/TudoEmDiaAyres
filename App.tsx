@@ -7,7 +7,7 @@ import MaintenanceForm from './components/MaintenanceForm';
 import CategoryManager from './components/CategoryManager';
 import History from './components/History';
 import { MaintenanceRecord, Periodicity, CategoryDefinition, MaintenanceNotification } from './types';
-import { loadRecords, saveRecords, loadCategories, saveCategories, exportData, getDaysRemaining } from './utils/helpers';
+import { loadRecords, saveRecords, loadCategories, saveCategories, getDaysRemaining } from './utils/helpers';
 import { Icons } from './constants';
 
 const App: React.FC = () => {
@@ -16,34 +16,66 @@ const App: React.FC = () => {
   const [categories, setCategories] = useState<CategoryDefinition[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<MaintenanceRecord | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string, type: 'maintenance' | 'category', title: string } | null>(null);
+
+  // Estado para instalação PWA/APK
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
     setRecords(loadRecords());
     setCategories(loadCategories());
+
+    // Captura o evento de instalação do navegador
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setDeferredPrompt(null);
+      console.log('App TudoEmDia instalado com sucesso!');
+    });
   }, []);
 
-  useEffect(() => { saveRecords(records); }, [records]);
-  useEffect(() => { saveCategories(categories); }, [categories]);
+  const handleInstallClick = useCallback(async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  }, [deferredPrompt]);
 
-  // Motor de Notificações Inteligentes
+  useEffect(() => {
+    saveRecords(records);
+  }, [records]);
+
+  useEffect(() => {
+    saveCategories(categories);
+  }, [categories]);
+
   const notifications = useMemo(() => {
     const alerts: MaintenanceNotification[] = [];
-    records.filter(r => r.status === 'pending' && r.notificationsEnabled && r.nextDate).forEach(r => {
-      const days = getDaysRemaining(r.nextDate);
-      if (days === 0) {
-        alerts.push({ id: `0-${r.id}`, maintenanceId: r.id, title: 'Vence Hoje', message: `A manutenção "${r.name}" vence hoje!`, type: 'danger', date: r.nextDate! });
-      } else if (days === 1) {
-        alerts.push({ id: `1-${r.id}`, maintenanceId: r.id, title: 'Vence Amanhã', message: `A manutenção "${r.name}" vence em 1 dia.`, type: 'warning', date: r.nextDate! });
-      } else if (days === 3) {
-        alerts.push({ id: `3-${r.id}`, maintenanceId: r.id, title: 'Vence em 3 dias', message: `Lembrete: "${r.name}" vence em 3 dias.`, type: 'info', date: r.nextDate! });
-      } else if (days === 7) {
-        alerts.push({ id: `7-${r.id}`, maintenanceId: r.id, title: 'Vence em 7 dias', message: `Faltam 7 dias para a manutenção "${r.name}".`, type: 'info', date: r.nextDate! });
-      } else if (days < 0) {
-        alerts.push({ id: `v-${r.id}`, maintenanceId: r.id, title: 'Vencida', message: `A manutenção "${r.name}" está atrasada há ${Math.abs(days)} dias!`, type: 'danger', date: r.nextDate! });
-      }
-    });
+    records
+      .filter(r => r.status === 'pending' && r.notificationsEnabled && r.nextDate)
+      .forEach(r => {
+        const days = getDaysRemaining(r.nextDate);
+        if (days === 0) alerts.push({ id: `0-${r.id}`, maintenanceId: r.id, title: 'Vence Hoje', message: `A manutenção "${r.name}" vence hoje!`, type: 'danger', date: r.nextDate! });
+        else if (days < 0) alerts.push({ id: `v-${r.id}`, maintenanceId: r.id, title: 'Vencida', message: `A manutenção "${r.name}" está atrasada há ${Math.abs(days)} dias!`, type: 'danger', date: r.nextDate! });
+        else if (days > 0 && days <= 3) alerts.push({ id: `w-${r.id}`, maintenanceId: r.id, title: 'Próximo Vencimento', message: `"${r.name}" vence em ${days} dias.`, type: 'warning', date: r.nextDate! });
+      });
     return alerts;
   }, [records]);
+
+  const handlePerformDelete = useCallback(() => {
+    if (!confirmDelete) return;
+    if (confirmDelete.type === 'maintenance') {
+      setRecords(prev => prev.filter(r => r.id !== confirmDelete.id));
+    } else if (confirmDelete.type === 'category') {
+      setCategories(prev => prev.filter(c => c.id !== confirmDelete.id));
+    }
+    setConfirmDelete(null);
+  }, [confirmDelete]);
 
   const handleSaveCategory = useCallback((category: CategoryDefinition) => {
     setCategories(prev => {
@@ -52,20 +84,12 @@ const App: React.FC = () => {
     });
   }, []);
 
-  const handleDeleteCategory = useCallback((id: string) => {
-    if (window.confirm('Excluir esta categoria?')) {
-      setCategories(prev => prev.filter(c => c.id !== id));
-    }
-  }, []);
-
   const executeCompletion = useCallback((id: string, allRecords: MaintenanceRecord[]): MaintenanceRecord[] => {
     const now = new Date().toISOString();
     const recordIndex = allRecords.findIndex(r => r.id === id);
     if (recordIndex === -1) return allRecords;
-
     const targetRecord = allRecords[recordIndex];
     const completedRecord: MaintenanceRecord = { ...targetRecord, status: 'completed', completedAt: now };
-
     let newRecords = [...allRecords];
     newRecords[recordIndex] = completedRecord;
 
@@ -78,30 +102,11 @@ const App: React.FC = () => {
         case Periodicity.YEAR_1: nextDate.setFullYear(nextDate.getFullYear() + 1); break;
         default: break; 
       }
-      
       if (targetRecord.periodicity !== Periodicity.CUSTOM) {
-        newRecords.push({
-          ...targetRecord,
-          id: Math.random().toString(36).substring(2, 15),
-          createdAt: now,
-          lastDate: targetRecord.nextDate || targetRecord.lastDate,
-          nextDate: nextDate.toISOString().split('T')[0],
-          status: 'pending',
-          completedAt: undefined
-        });
+        newRecords.push({ ...targetRecord, id: Math.random().toString(36).substring(2, 15), createdAt: now, lastDate: targetRecord.nextDate || targetRecord.lastDate, nextDate: nextDate.toISOString().split('T')[0], status: 'pending', completedAt: undefined });
       }
     }
     return newRecords;
-  }, []);
-
-  const handleCompleteMaintenance = useCallback((id: string) => {
-    setRecords(prev => executeCompletion(id, prev));
-  }, [executeCompletion]);
-
-  const handleDeleteMaintenance = useCallback((id: string) => {
-    if (window.confirm('Deseja excluir este registro permanentemente?')) {
-      setRecords(prev => prev.filter(r => r.id !== id));
-    }
   }, []);
 
   const handleSaveMaintenance = useCallback((formData: Partial<MaintenanceRecord>) => {
@@ -115,13 +120,7 @@ const App: React.FC = () => {
         return prev.map(r => r.id === editingRecord.id ? { ...r, ...formData } as MaintenanceRecord : r);
       } else {
         const newId = Math.random().toString(36).substring(2, 15);
-        const newRecord: MaintenanceRecord = {
-          id: newId,
-          createdAt: now,
-          status: formData.status || 'pending',
-          notificationsEnabled: true,
-          ...formData as MaintenanceRecord
-        };
+        const newRecord: MaintenanceRecord = { id: newId, createdAt: now, status: formData.status || 'pending', notificationsEnabled: formData.notificationsEnabled ?? true, ...formData as MaintenanceRecord };
         const withNew = [...prev, newRecord];
         return newRecord.status === 'completed' ? executeCompletion(newId, withNew) : withNew;
       }
@@ -136,15 +135,17 @@ const App: React.FC = () => {
       setActiveTab={setActiveTab}
       notifications={notifications}
       onNewMaintenance={() => { setEditingRecord(null); setIsFormOpen(true); }}
+      canInstall={!!deferredPrompt}
+      onInstall={handleInstallClick}
     >
-      {activeTab === 'dashboard' && <Dashboard records={records} onComplete={handleCompleteMaintenance} />}
+      {activeTab === 'dashboard' && <Dashboard records={records} onComplete={(id) => setRecords(prev => executeCompletion(id, prev))} />}
       {activeTab === 'list' && (
         <MaintenanceList 
           records={records} 
           categories={categories}
           onEdit={(r) => { setEditingRecord(r); setIsFormOpen(true); }} 
-          onDelete={handleDeleteMaintenance}
-          onComplete={handleCompleteMaintenance}
+          onDelete={(id) => setConfirmDelete({ id, type: 'maintenance', title: 'Excluir Manutenção?' })}
+          onComplete={(id) => setRecords(prev => executeCompletion(id, prev))}
         />
       )}
       {activeTab === 'categories' && (
@@ -152,16 +153,45 @@ const App: React.FC = () => {
           categories={categories}
           records={records}
           onSave={handleSaveCategory}
-          onDelete={handleDeleteCategory}
+          onDelete={(id) => setConfirmDelete({ id, type: 'category', title: 'Excluir Categoria?' })}
         />
       )}
       {activeTab === 'history' && (
         <History 
           records={records} 
           categories={categories}
-          onDelete={handleDeleteMaintenance}
+          onDelete={(id) => setConfirmDelete({ id, type: 'maintenance', title: 'Excluir Registro do Histórico?' })}
         />
       )}
+      
+      {confirmDelete && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icons.Trash2 className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">{confirmDelete.title}</h3>
+              <p className="text-sm text-slate-500 mb-6">Esta ação é permanente e não pode ser desfeita.</p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setConfirmDelete(null)}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors text-sm"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handlePerformDelete}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-100 transition-all active:scale-95 text-sm"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isFormOpen && (
         <MaintenanceForm 
           onSave={handleSaveMaintenance} 
