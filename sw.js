@@ -1,87 +1,62 @@
-const CACHE_NAME = 'mainttrack-v4';
+const CACHE_NAME = 'tudoemdia-v5';
+const OFFLINE_URL = './index.html';
+
 const ASSETS = [
   './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return Promise.allSettled(
-        ASSETS.map(asset => cache.add(asset))
-      );
+      return Promise.allSettled(ASSETS.map(url => cache.add(url)));
     })
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
-            return caches.delete(name);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.keys().then((keys) => Promise.all(
+      keys.map((key) => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+      })
+    ))
   );
+  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
-  
-  // Intercepta e mata imediatamente requisições para o domínio quebrado (.sh)
+
+  // 1. Bloqueio imediato do domínio fantasma que causava erros no console
   if (url.includes('cdn-icons-png.sh')) {
-    event.respondWith(
-      new Response(null, { 
-        status: 404, 
-        statusText: 'Invalid Domain Blocked' 
-      })
-    );
+    event.respondWith(new Response(null, { status: 404 }));
     return;
   }
 
-  // Apenas intercepta requisições HTTP/HTTPS
-  if (!url.startsWith('http')) return;
+  // 2. Apenas processa GET de rede
+  if (event.request.method !== 'GET' || !url.startsWith('http')) return;
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      // Se não está no cache, tenta buscar na rede
-      return fetch(event.request)
-        .then((networkResponse) => {
-          // Verifica se a resposta é válida antes de tentar cachear
-          if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-            return networkResponse;
+    caches.match(event.request).then((cached) => {
+      const networked = fetch(event.request)
+        .then((response) => {
+          if (response && response.status === 200 && response.type === 'basic') {
+            const cacheCopy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
           }
-
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-
-          return networkResponse;
+          return response;
         })
-        .catch((error) => {
-          console.log('Fetch falhou para:', url, error);
-          
-          // Tratamento para falha de navegação (offline)
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-          
-          // Retorna uma resposta vazia com status de erro em vez de deixar a promessa rejeitar
-          return new Response(null, { 
-            status: 503, 
-            statusText: 'Service Unavailable (Offline)' 
-          });
+        .catch(() => {
+          if (event.request.mode === 'navigate') return caches.match(OFFLINE_URL);
+          return null;
         });
+
+      return cached || networked;
     })
   );
 });
