@@ -14,25 +14,49 @@
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="manifest" href="./manifest.json">
-    <title>TudoEmDia - Gestão de Manutenções</title>
+    <title>TudoEmDia - Gestão Profissional</title>
     
-    <!-- Tailwind CDN (Uso em desenvolvimento/prototipagem rápida conforme solicitado) -->
+    <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+              },
+            }
+          }
+        }
+      }
+    </script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         body { 
           font-family: 'Inter', sans-serif; 
-          -webkit-tap-highlight-color: transparent; 
           background-color: #f8fafc; 
-          overscroll-behavior-y: contain;
+          color: #0f172a;
+          -webkit-font-smoothing: antialiased;
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        @media print { .no-print { display: none !important; } }
+        .glass {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
     </style>
 
     <script type="importmap">
@@ -46,27 +70,16 @@
     "jspdf": "https://esm.sh/jspdf@2.5.1",
     "jspdf-autotable": "https://esm.sh/jspdf-autotable@3.8.2",
     "recharts": "https://esm.sh/recharts@2.15.0",
-    "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <!-- O sistema importa o index.tsx automaticamente. 
-         A remoção do Service Worker manual evita conflitos de MIME type em ambientes de sandbox. -->
-    <script>
-        // Limpeza de Service Workers antigos para garantir que o navegador não use caches com MIME types errados
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(registrations => {
-                for(let registration of registrations) {
-                    registration.unregister();
-                }
-            });
-        }
-    </script>
+    <!-- Script de inicialização automática do módulo index.tsx pelo sistema -->
 </body>
 </html>

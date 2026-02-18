@@ -1,13 +1,22 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './',
+  base: './', // Crucial para GitHub Pages
   build: {
     outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'terser',
     rollupOptions: {
-      external: ['path', 'fs', 'crypto'], // Evita que o bundler tente incluir módulos nativos do Node
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          utils: ['jspdf', 'recharts']
+        }
+      }
     }
   }
 });
