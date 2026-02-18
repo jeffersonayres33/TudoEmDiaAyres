@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-title" content="TudoEmDia">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Ícones Corrigidos -->
+    <!-- Ícones -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="manifest" href="./manifest.json">
@@ -46,34 +46,23 @@
     "jspdf": "https://esm.sh/jspdf@^4.1.0",
     "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7",
     "recharts": "https://esm.sh/recharts@^3.7.0",
+    "path": "https://esm.sh/path@^0.12.7",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
-    "path": "https://esm.sh/path@^0.12.7"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
+    <!-- O script index.tsx é importado automaticamente pelo sistema, 
+         remover a tag manual evita o erro de MIME type application/octet-stream. -->
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Adicionamos um parâmetro de versão para forçar o recarregamento do script do SW
-                navigator.serviceWorker.register('./sw.js?v=10', { scope: './' })
-                    .then(reg => {
-                        console.log('TudoEmDia SW v10 Online');
-                        reg.onupdatefound = () => {
-                            const installingWorker = reg.installing;
-                            installingWorker.onstatechange = () => {
-                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    // Se um novo SW foi instalado, recarregamos para limpar caches de MIME type
-                                    window.location.reload();
-                                }
-                            };
-                        };
-                    })
-                    .catch(err => console.debug('SW Bypass'));
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW Cache Resetado'))
+                    .catch(err => console.debug('SW Offline'));
             });
         }
     </script>
