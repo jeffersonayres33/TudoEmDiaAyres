@@ -1,11 +1,11 @@
-const CACHE_NAME = 'tudoemdia-v8';
+const CACHE_NAME = 'tudoemdia-v9';
 const OFFLINE_URL = './index.html';
 
+// Removido cdn.tailwindcss.com daqui para evitar erro de CORS no cache.add
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
   'https://cdn-icons-png.flaticon.com/512/3596/3596091.png'
 ];
@@ -33,10 +33,16 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // CORREÇÃO CRÍTICA: Bloqueia silenciosamente o domínio inválido para evitar TypeError no console
+  // Bloqueia domínios inválidos
   if (url.includes('cdn-icons-png.sh')) {
-    event.respondWith(new Response(null, { status: 404, statusText: 'Invalid Domain Blocked' }));
+    event.respondWith(new Response(null, { status: 404 }));
     return;
+  }
+
+  // CORREÇÃO DE CORS: Se for o Tailwind CDN, não intercepta. 
+  // Isso permite que o navegador carregue o script normalmente sem passar pelo fetch do SW.
+  if (url.includes('tailwindcss.com')) {
+    return; 
   }
 
   if (event.request.method !== 'GET' || !url.startsWith('http')) return;
@@ -47,6 +53,7 @@ self.addEventListener('fetch', (event) => {
 
       return fetch(event.request)
         .then((response) => {
+          // Só tenta cachear se for sucesso e não for o Tailwind (já filtrado acima)
           if (response && response.status === 200) {
             const cacheCopy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
@@ -54,12 +61,8 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Se for navegação, retorna a página inicial offline
-          if (event.request.mode === 'navigate') {
-            return caches.match(OFFLINE_URL);
-          }
-          // Para outros recursos, retorna erro silencioso
-          return new Response(null, { status: 408 });
+          if (event.request.mode === 'navigate') return caches.match(OFFLINE_URL);
+          return null;
         });
     })
   );

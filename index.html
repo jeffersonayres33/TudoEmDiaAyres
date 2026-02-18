@@ -16,7 +16,9 @@
     <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão de Manutenções</title>
     
+    <!-- Tailwind CDN: O Service Worker v9 agora ignora este link para evitar erro de CORS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -55,13 +57,11 @@
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
-        // Registro de Service Worker com limpeza de cache agressiva para resolver problemas de deploy
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
                     .then(reg => {
-                        console.log('TudoEmDia SW Online:', reg.scope);
-                        // Força atualização se houver um novo worker
+                        console.log('TudoEmDia SW v9 Online');
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
                             installingWorker.onstatechange = () => {
@@ -71,7 +71,7 @@
                             };
                         };
                     })
-                    .catch(err => console.warn('Modo desenvolvimento: SW ignorado.'));
+                    .catch(err => console.debug('SW Bypass em dev'));
             });
         }
     </script>
