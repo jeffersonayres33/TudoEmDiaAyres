@@ -1,7 +1,6 @@
-const CACHE_NAME = 'tudoemdia-v9';
+const CACHE_NAME = 'tudoemdia-v10';
 const OFFLINE_URL = './index.html';
 
-// Removido cdn.tailwindcss.com daqui para evitar erro de CORS no cache.add
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +12,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // Usamos Promise.allSettled para garantir que um erro em um asset não quebre o cache dos outros
       return Promise.allSettled(ASSETS.map(url => cache.add(url)));
     })
   );
@@ -33,14 +33,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Bloqueia domínios inválidos
+  // 1. BLOQUEIO DE DOMÍNIO INVÁLIDO
   if (url.includes('cdn-icons-png.sh')) {
     event.respondWith(new Response(null, { status: 404 }));
     return;
   }
 
-  // CORREÇÃO DE CORS: Se for o Tailwind CDN, não intercepta. 
-  // Isso permite que o navegador carregue o script normalmente sem passar pelo fetch do SW.
+  // 2. BYPASS DE TRANSPILAÇÃO (.tsx / .ts)
+  // Deixamos o servidor/plataforma lidar com isso. O SW não deve cachear o código fonte puro.
+  if (url.endsWith('.tsx') || url.endsWith('.ts')) {
+    return;
+  }
+
+  // 3. BYPASS DE CORS (Tailwind)
   if (url.includes('tailwindcss.com')) {
     return; 
   }
@@ -53,8 +58,8 @@ self.addEventListener('fetch', (event) => {
 
       return fetch(event.request)
         .then((response) => {
-          // Só tenta cachear se for sucesso e não for o Tailwind (já filtrado acima)
-          if (response && response.status === 200) {
+          // Só cacheia respostas válidas e que não sejam scripts de módulo (para evitar conflitos de MIME)
+          if (response && response.status === 200 && !url.includes('.tsx')) {
             const cacheCopy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
           }

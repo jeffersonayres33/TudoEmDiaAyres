@@ -1,16 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { MaintenanceRecord } from "../types";
 
-// Função para obter a instância da IA de forma segura
-const getAIClient = () => {
-  const apiKey = process.env.API_KEY || "";
-  if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
-};
+// Note: GoogleGenAI client is initialized inside each function to ensure the most up-to-date API key is used
+// and to follow the guideline of creating a new instance right before making an API call.
 
 export async function getMaintenanceTips(maintenance: MaintenanceRecord): Promise<string> {
-  const ai = getAIClient();
-  if (!ai) return "Chave de IA não configurada. Configure o segredo API_KEY no deploy.";
+  // Always use the required format for initialization
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const response = await ai.models.generateContent({
@@ -22,6 +18,7 @@ export async function getMaintenanceTips(maintenance: MaintenanceRecord): Promis
       Responda em português de forma concisa e direta.`,
     });
 
+    // Accessing .text as a property as per latest SDK definition
     return response.text || "Dicas temporariamente indisponíveis.";
   } catch (error) {
     console.error("Gemini Error:", error);
@@ -30,8 +27,8 @@ export async function getMaintenanceTips(maintenance: MaintenanceRecord): Promis
 }
 
 export async function generateMaintenanceReportSummary(records: MaintenanceRecord[]): Promise<string> {
-  const ai = getAIClient();
-  if (!ai) return "Sumário indisponível sem chave de API.";
+  // Always use the required format for initialization
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
     const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
@@ -43,6 +40,7 @@ export async function generateMaintenanceReportSummary(records: MaintenanceRecor
       Faça um breve resumo executivo (máximo 4 linhas) sobre a saúde geral das manutenções e sugira onde pode haver economia.`,
     });
 
+    // Accessing .text as a property as per latest SDK definition
     return response.text || "Sumário indisponível.";
   } catch (error) {
     console.error("Gemini Summary Error:", error);

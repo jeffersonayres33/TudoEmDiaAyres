@@ -16,7 +16,7 @@
     <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão de Manutenções</title>
     
-    <!-- Tailwind CDN: O Service Worker v9 agora ignora este link para evitar erro de CORS -->
+    <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -46,9 +46,9 @@
     "jspdf": "https://esm.sh/jspdf@^4.1.0",
     "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7",
     "recharts": "https://esm.sh/recharts@^3.7.0",
-    "path": "https://esm.sh/path@^0.12.7",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "path": "https://esm.sh/path@^0.12.7"
   }
 }
 </script>
@@ -59,19 +59,21 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                // Adicionamos um parâmetro de versão para forçar o recarregamento do script do SW
+                navigator.serviceWorker.register('./sw.js?v=10', { scope: './' })
                     .then(reg => {
-                        console.log('TudoEmDia SW v9 Online');
+                        console.log('TudoEmDia SW v10 Online');
                         reg.onupdatefound = () => {
                             const installingWorker = reg.installing;
                             installingWorker.onstatechange = () => {
                                 if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // Se um novo SW foi instalado, recarregamos para limpar caches de MIME type
                                     window.location.reload();
                                 }
                             };
                         };
                     })
-                    .catch(err => console.debug('SW Bypass em dev'));
+                    .catch(err => console.debug('SW Bypass'));
             });
         }
     </script>
