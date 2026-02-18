@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
         port: 3000,
         host: '0.0.0.0',
       },
-      // Importante: base relativa para funcionar em subpastas de repositório
+      // Importante: usar './' para que os caminhos sejam relativos à subpasta do GitHub
       base: './',
       plugins: [react()],
       define: {
@@ -25,7 +25,14 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         assetsDir: 'assets',
         sourcemap: false,
-        minify: 'esbuild'
+        minify: 'esbuild',
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              'vendor': ['react', 'react-dom', 'lucide-react', 'recharts']
+            }
+          }
+        }
       }
     };
 });

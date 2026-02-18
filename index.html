@@ -10,10 +10,11 @@
     <meta name="apple-mobile-web-app-title" content="TudoEmDia">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
+    <!-- Ícones Corrigidos -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="manifest" href="manifest.json">
-    <title>TudoEmDia - Gestão Profissional</title>
+    <title>TudoEmDia - Gestão de Manutenções</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +22,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        body { 
+          font-family: 'Inter', sans-serif; 
+          -webkit-tap-highlight-color: transparent; 
+          background-color: #f8fafc; 
+          overscroll-behavior-y: contain;
+        }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         @media print { .no-print { display: none !important; } }
@@ -49,11 +55,13 @@
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
+        // Registro de Service Worker otimizado para subpastas (GitHub Pages)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
+                // Usar caminho relativo para garantir que funcione em /TudoEmDiaAyres/
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
-                    .then(reg => console.log('SW ativo:', reg.scope))
-                    .catch(err => console.error('Erro SW:', err));
+                    .then(reg => console.log('TudoEmDia SW ativo:', reg.scope))
+                    .catch(err => console.warn('SW não registrado (ambiente de dev):', err.message));
             });
         }
     </script>

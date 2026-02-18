@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tudoemdia-v5';
+const CACHE_NAME = 'tudoemdia-v7';
 const OFFLINE_URL = './index.html';
 
 const ASSETS = [
@@ -6,12 +6,14 @@ const ASSETS = [
   './index.html',
   './manifest.json',
   'https://cdn.tailwindcss.com',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap'
+  'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+  'https://cdn-icons-png.flaticon.com/512/3596/3596091.png'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // Tenta adicionar cada asset individualmente para não quebrar o cache se um falhar
       return Promise.allSettled(ASSETS.map(url => cache.add(url)));
     })
   );
@@ -32,20 +34,17 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // 1. Bloqueio imediato do domínio fantasma que causava erros no console
-  if (url.includes('cdn-icons-png.sh')) {
-    event.respondWith(new Response(null, { status: 404 }));
-    return;
-  }
+  // Ignorar domínios inválidos conhecidos para evitar erros no console
+  if (url.includes('cdn-icons-png.sh')) return;
 
-  // 2. Apenas processa GET de rede
+  // Apenas processa GET e protocolos http/https
   if (event.request.method !== 'GET' || !url.startsWith('http')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const networked = fetch(event.request)
+      const networkFetch = fetch(event.request)
         .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
+          if (response && response.status === 200) {
             const cacheCopy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
           }
@@ -56,7 +55,7 @@ self.addEventListener('fetch', (event) => {
           return null;
         });
 
-      return cached || networked;
+      return cached || networkFetch;
     })
   );
 });
