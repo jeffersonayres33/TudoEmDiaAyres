@@ -16,7 +16,7 @@
     <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão de Manutenções</title>
     
-    <!-- Tailwind CDN -->
+    <!-- Tailwind CDN (Uso em desenvolvimento/prototipagem rápida conforme solicitado) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,31 +38,33 @@
     <script type="importmap">
 {
   "imports": {
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "lucide-react": "https://esm.sh/lucide-react@^0.574.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.41.0",
-    "jspdf": "https://esm.sh/jspdf@^4.1.0",
-    "jspdf-autotable": "https://esm.sh/jspdf-autotable@^5.0.7",
-    "recharts": "https://esm.sh/recharts@^3.7.0",
-    "path": "https://esm.sh/path@^0.12.7",
+    "react": "https://esm.sh/react@19.0.0",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
+    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+    "lucide-react": "https://esm.sh/lucide-react@0.474.0",
+    "@google/genai": "https://esm.sh/@google/genai@0.2.1",
+    "jspdf": "https://esm.sh/jspdf@2.5.1",
+    "jspdf-autotable": "https://esm.sh/jspdf-autotable@3.8.2",
+    "recharts": "https://esm.sh/recharts@2.15.0",
     "vite": "https://esm.sh/vite@^7.3.1",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4",
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
   }
 }
 </script>
 </head>
 <body>
     <div id="root"></div>
-    <!-- O script index.tsx é importado automaticamente pelo sistema, 
-         remover a tag manual evita o erro de MIME type application/octet-stream. -->
+    <!-- O sistema importa o index.tsx automaticamente. 
+         A remoção do Service Worker manual evita conflitos de MIME type em ambientes de sandbox. -->
     <script>
+        // Limpeza de Service Workers antigos para garantir que o navegador não use caches com MIME types errados
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('SW Cache Resetado'))
-                    .catch(err => console.debug('SW Offline'));
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
             });
         }
     </script>

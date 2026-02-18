@@ -1,20 +1,20 @@
-// Service Worker v11 - Limpeza de Cache de MIME Types
-const CACHE_NAME = 'tudoemdia-reset-v11';
-
-self.addEventListener('install', (event) => {
+// SW Kill Switch - Remove qualquer interferência no carregamento de módulos
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(
-      keys.map((key) => caches.delete(key))
-    ))
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => caches.delete(cacheName))
+      );
+    }).then(() => {
+      return self.registration.unregister();
+    }).then(() => {
+      return self.clients.matchAll();
+    }).then((clients) => {
+      clients.forEach(client => client.navigate(client.url));
+    })
   );
-  self.clients.claim();
-});
-
-// Deixa o navegador lidar com as requisições diretamente para evitar erros de MIME type no ambiente de desenvolvimento
-self.addEventListener('fetch', (event) => {
-  return;
 });
