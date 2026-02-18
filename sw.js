@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mainttrack-v3';
+const CACHE_NAME = 'mainttrack-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -33,12 +33,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
   
-  // Bloqueio preventivo para URLs malformadas que ficaram "viciadas" no cache do navegador/PWA
+  // Intercepta e mata imediatamente requisições para o domínio quebrado (.sh)
   if (url.includes('cdn-icons-png.sh')) {
-    event.respondWith(new Response(null, { status: 404, statusText: 'Domain Blocked' }));
+    event.respondWith(
+      new Response(null, { 
+        status: 404, 
+        statusText: 'Invalid Domain Blocked' 
+      })
+    );
     return;
   }
 
+  // Apenas intercepta requisições HTTP/HTTPS
   if (!url.startsWith('http')) return;
 
   event.respondWith(
@@ -47,8 +53,10 @@ self.addEventListener('fetch', (event) => {
         return cachedResponse;
       }
 
+      // Se não está no cache, tenta buscar na rede
       return fetch(event.request)
         .then((networkResponse) => {
+          // Verifica se a resposta é válida antes de tentar cachear
           if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
             return networkResponse;
           }
@@ -60,11 +68,19 @@ self.addEventListener('fetch', (event) => {
 
           return networkResponse;
         })
-        .catch(() => {
+        .catch((error) => {
+          console.log('Fetch falhou para:', url, error);
+          
+          // Tratamento para falha de navegação (offline)
           if (event.request.mode === 'navigate') {
             return caches.match('./index.html');
           }
-          return new Response(null, { status: 408 });
+          
+          // Retorna uma resposta vazia com status de erro em vez de deixar a promessa rejeitar
+          return new Response(null, { 
+            status: 503, 
+            statusText: 'Service Unavailable (Offline)' 
+          });
         });
     })
   );
