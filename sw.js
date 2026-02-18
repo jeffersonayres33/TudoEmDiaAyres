@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tudoemdia-v7';
+const CACHE_NAME = 'tudoemdia-v8';
 const OFFLINE_URL = './index.html';
 
 const ASSETS = [
@@ -13,7 +13,6 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Tenta adicionar cada asset individualmente para não quebrar o cache se um falhar
       return Promise.allSettled(ASSETS.map(url => cache.add(url)));
     })
   );
@@ -34,15 +33,19 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
-  // Ignorar domínios inválidos conhecidos para evitar erros no console
-  if (url.includes('cdn-icons-png.sh')) return;
+  // CORREÇÃO CRÍTICA: Bloqueia silenciosamente o domínio inválido para evitar TypeError no console
+  if (url.includes('cdn-icons-png.sh')) {
+    event.respondWith(new Response(null, { status: 404, statusText: 'Invalid Domain Blocked' }));
+    return;
+  }
 
-  // Apenas processa GET e protocolos http/https
   if (event.request.method !== 'GET' || !url.startsWith('http')) return;
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const networkFetch = fetch(event.request)
+      if (cached) return cached;
+
+      return fetch(event.request)
         .then((response) => {
           if (response && response.status === 200) {
             const cacheCopy = response.clone();
@@ -51,11 +54,13 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          if (event.request.mode === 'navigate') return caches.match(OFFLINE_URL);
-          return null;
+          // Se for navegação, retorna a página inicial offline
+          if (event.request.mode === 'navigate') {
+            return caches.match(OFFLINE_URL);
+          }
+          // Para outros recursos, retorna erro silencioso
+          return new Response(null, { status: 408 });
         });
-
-      return cached || networkFetch;
     })
   );
 });

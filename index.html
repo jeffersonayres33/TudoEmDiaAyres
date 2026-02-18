@@ -13,7 +13,7 @@
     <!-- Ícones Corrigidos -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão de Manutenções</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -55,13 +55,23 @@
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
     <script>
-        // Registro de Service Worker otimizado para subpastas (GitHub Pages)
+        // Registro de Service Worker com limpeza de cache agressiva para resolver problemas de deploy
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Usar caminho relativo para garantir que funcione em /TudoEmDiaAyres/
                 navigator.serviceWorker.register('./sw.js', { scope: './' })
-                    .then(reg => console.log('TudoEmDia SW ativo:', reg.scope))
-                    .catch(err => console.warn('SW não registrado (ambiente de dev):', err.message));
+                    .then(reg => {
+                        console.log('TudoEmDia SW Online:', reg.scope);
+                        // Força atualização se houver um novo worker
+                        reg.onupdatefound = () => {
+                            const installingWorker = reg.installing;
+                            installingWorker.onstatechange = () => {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    window.location.reload();
+                                }
+                            };
+                        };
+                    })
+                    .catch(err => console.warn('Modo desenvolvimento: SW ignorado.'));
             });
         }
     </script>
