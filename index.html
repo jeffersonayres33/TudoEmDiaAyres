@@ -16,7 +16,7 @@
     <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão Profissional</title>
     
-    <!-- Tailwind Play CDN (Uso aceitável para prototipagem rápida) -->
+    <!-- Tailwind Play CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -57,6 +57,7 @@
           to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        .tailwind-cdn-warning { display: none !important; }
     </style>
 
     <script type="importmap">
@@ -65,11 +66,11 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.474.0",
-    "@google/genai": "https://esm.sh/@google/genai@0.21.0",
+    "lucide-react": "https://esm.sh/lucide-react@0.474.0?external=react",
+    "@google/genai": "https://esm.sh/@google/genai@latest",
     "jspdf": "https://esm.sh/jspdf@2.5.1",
     "jspdf-autotable": "https://esm.sh/jspdf-autotable@3.8.2",
-    "recharts": "https://esm.sh/recharts@2.15.0",
+    "recharts": "https://esm.sh/recharts@2.15.0?external=react,react-dom",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/",
     "vite": "https://esm.sh/vite@^7.3.1",
