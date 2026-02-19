@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: './', // Crucial para GitHub Pages
+  base: './', // Crucial para GitHub Pages e ambientes de preview
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -19,4 +19,6 @@ export default defineConfig({
       }
     }
   }
+  // Fix: Removed the 'server' block because 'historyApiFallback' is not a valid Vite configuration property.
+  // Vite's development server automatically provides history API fallback for SPA routing.
 });

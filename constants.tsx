@@ -26,7 +26,10 @@ import {
   Droplets,
   Hammer,
   ShieldCheck,
-  Tag
+  Tag,
+  Upload,
+  Database,
+  Save
 } from 'lucide-react';
 
 export const ICON_MAP: Record<string, any> = {
@@ -49,7 +52,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
   'Outro': 'bg-slate-100 text-slate-700'
 };
 
-// Fix: Adding missing icon references for components using the Icons export
 export const Icons = {
   Calendar,
   AlertCircle,
@@ -69,5 +71,8 @@ export const Icons = {
   BellOff,
   Tag,
   Zap,
-  ShieldCheck
+  ShieldCheck,
+  Upload,
+  Database,
+  Save
 };

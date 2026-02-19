@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -13,14 +14,66 @@
     <!-- Ícones -->
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3596/3596091.png">
-    <link rel="manifest" href="./assets/manifest-NgYuqV3v.json">
+    <link rel="manifest" href="./manifest.json">
     <title>TudoEmDia - Gestão Profissional</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- Tailwind CDN com Configuração para restaurar o layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // 1. Silenciar o aviso de "Tailwind CDN should not be used in production"
+      (function() {
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+          if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+          originalWarn.apply(console, args);
+        };
+      })();
 
+      // 2. Configuração do Tema (Restaura o visual original)
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: '#eff6ff',
+                100: '#dbeafe',
+                500: '#3b82f6',
+                600: '#2563eb',
+                700: '#1d4ed8',
+              },
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          }
+        }
+      }
+    </script>
+
+    <style>
+      /* Estilos Críticos para o Layout "do jeito que era" */
+      body { 
+        background-color: #f8fafc; /* slate-50 */
+        font-family: 'Inter', sans-serif;
+      }
+      .glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in { 
+        animation: fadeIn 0.4s ease-out forwards; 
+      }
+    </style>
+    
     <script type="importmap">
 {
   "imports": {
@@ -39,11 +92,9 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="./assets/index-B91fhdRq.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/utils-GRRr--_w.js">
-  <link rel="stylesheet" crossorigin href="./assets/index-DRzV453y.css">
 </head>
 <body>
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>

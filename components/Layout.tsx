@@ -11,6 +11,8 @@ interface LayoutProps {
   notifications: MaintenanceNotification[];
   canInstall?: boolean;
   onInstall?: () => void;
+  onBackup: () => void;
+  onImport: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
@@ -20,7 +22,9 @@ const Layout: React.FC<LayoutProps> = ({
   onNewMaintenance, 
   notifications,
   canInstall,
-  onInstall
+  onInstall,
+  onBackup,
+  onImport
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -43,7 +47,8 @@ const Layout: React.FC<LayoutProps> = ({
           </h1>
         </div>
         
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto custom-scrollbar">
+          <p className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Menu Principal</p>
           {navItems.map(item => (
             <button
               key={item.id}
@@ -58,6 +63,24 @@ const Layout: React.FC<LayoutProps> = ({
               {item.label}
             </button>
           ))}
+
+          <div className="mt-6 pt-6 border-t border-slate-100">
+            <p className="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Dados</p>
+            <button
+              onClick={onBackup}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              <Icons.Save className="w-5 h-5 text-emerald-500" />
+              Backup de Dados
+            </button>
+            <button
+              onClick={onImport}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-50 transition-colors"
+            >
+              <Icons.Upload className="w-5 h-5 text-blue-500" />
+              Restaurar Backup
+            </button>
+          </div>
         </nav>
 
         <div className="p-4 space-y-3">
@@ -92,16 +115,6 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="hidden md:block"></div>
 
           <div className="flex items-center gap-4">
-            {canInstall && (
-              <button 
-                onClick={onInstall}
-                className="md:hidden install-button flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold"
-              >
-                <Icons.Download className="w-3.5 h-3.5" />
-                Instalar
-              </button>
-            )}
-
             <div className="relative">
               <button 
                 onClick={() => setIsNotifOpen(!isNotifOpen)}
@@ -169,6 +182,14 @@ const Layout: React.FC<LayoutProps> = ({
                 {item.label}
               </button>
             ))}
+            <div className="pt-4 border-t border-slate-100">
+               <button onClick={onBackup} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600">
+                 <Icons.Save className="w-5 h-5 text-emerald-500" /> Backup
+               </button>
+               <button onClick={onImport} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-slate-600">
+                 <Icons.Upload className="w-5 h-5 text-blue-500" /> Restaurar
+               </button>
+            </div>
           </div>
         )}
 

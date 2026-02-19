@@ -67,6 +67,53 @@ const App: React.FC = () => {
     return alerts;
   }, [records]);
 
+  const handleBackup = useCallback(() => {
+    const data = {
+      records,
+      categories,
+      exportDate: new Date().toISOString(),
+      appName: 'TudoEmDia'
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `backup_tudoemdia_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [records, categories]);
+
+  const handleImport = useCallback(() => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (event: any) => {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        try {
+          const content = JSON.parse(e.target.result);
+          if (content.records && content.categories) {
+            if (confirm('Deseja substituir seus dados atuais pelos dados do backup? Esta ação não pode ser desfeita.')) {
+              setRecords(content.records);
+              setCategories(content.categories);
+              alert('Dados restaurados com sucesso!');
+            }
+          } else {
+            alert('Arquivo de backup inválido.');
+          }
+        } catch (err) {
+          alert('Erro ao processar o arquivo. Certifique-se de que é um JSON válido.');
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  }, []);
+
   const handlePerformDelete = useCallback(() => {
     if (!confirmDelete) return;
     if (confirmDelete.type === 'maintenance') {
@@ -137,6 +184,8 @@ const App: React.FC = () => {
       onNewMaintenance={() => { setEditingRecord(null); setIsFormOpen(true); }}
       canInstall={!!deferredPrompt}
       onInstall={handleInstallClick}
+      onBackup={handleBackup}
+      onImport={handleImport}
     >
       {activeTab === 'dashboard' && <Dashboard records={records} onComplete={(id) => setRecords(prev => executeCompletion(id, prev))} />}
       {activeTab === 'list' && (
