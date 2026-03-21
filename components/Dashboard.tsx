@@ -1,8 +1,7 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { MaintenanceRecord } from '../types';
 import { Icons, ICON_MAP } from '../constants';
 import { getDaysRemaining, formatDate, loadCategories } from '../utils/helpers';
-import { generateMaintenanceReportSummary } from '../services/geminiService';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie
@@ -14,8 +13,6 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ records, onComplete }) => {
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const categories = useMemo(() => loadCategories(), []);
   
   const activeRecords = useMemo(() => records.filter(r => r.status !== 'completed'), [records]);
@@ -31,17 +28,6 @@ const Dashboard: React.FC<DashboardProps> = ({ records, onComplete }) => {
 
     return { total: activeRecords.length, upcoming, overdue, totalCost };
   }, [activeRecords, records]);
-
-  useEffect(() => {
-    const fetchAiSummary = async () => {
-      if (records.length === 0 || aiSummary) return;
-      setIsAiLoading(true);
-      const summary = await generateMaintenanceReportSummary(records);
-      setAiSummary(summary);
-      setIsAiLoading(false);
-    };
-    fetchAiSummary();
-  }, [records]);
 
   const categoryData = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -75,31 +61,6 @@ const Dashboard: React.FC<DashboardProps> = ({ records, onComplete }) => {
           <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">Sistema Online</span>
         </div>
       </header>
-
-      {/* AI Summary Card */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-200 relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
-          <Icons.Zap className="w-32 h-32" />
-        </div>
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="bg-white/20 p-2 rounded-lg backdrop-blur-md">
-              <Icons.ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="font-bold text-lg">Resumo Inteligente (IA)</h3>
-          </div>
-          {isAiLoading ? (
-            <div className="flex items-center gap-3">
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              <p className="text-blue-100 text-sm italic">Analisando dados financeiros e técnicos...</p>
-            </div>
-          ) : (
-            <p className="text-blue-50 leading-relaxed text-sm font-medium max-w-2xl">
-              {aiSummary || "Adicione registros para receber uma análise estratégica da sua saúde de manutenção."}
-            </p>
-          )}
-        </div>
-      </div>
 
       {/* Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

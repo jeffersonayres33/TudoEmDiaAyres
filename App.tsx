@@ -195,6 +195,7 @@ const App: React.FC = () => {
           onEdit={(r) => { setEditingRecord(r); setIsFormOpen(true); }} 
           onDelete={(id) => setConfirmDelete({ id, type: 'maintenance', title: 'Excluir Manutenção?' })}
           onComplete={(id) => setRecords(prev => executeCompletion(id, prev))}
+          onNewMaintenance={() => { setEditingRecord(null); setIsFormOpen(true); }}
         />
       )}
       {activeTab === 'categories' && (

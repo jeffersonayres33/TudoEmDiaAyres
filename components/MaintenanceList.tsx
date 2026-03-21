@@ -3,7 +3,6 @@ import React, { useState, useMemo } from 'react';
 import { MaintenanceRecord, CategoryDefinition } from '../types';
 import { Icons, ICON_MAP } from '../constants';
 import { formatDate, getDaysRemaining, getStatusColor, formatDateTime } from '../utils/helpers';
-import { getMaintenanceTips } from '../services/geminiService';
 
 interface MaintenanceListProps {
   records: MaintenanceRecord[];
@@ -11,13 +10,12 @@ interface MaintenanceListProps {
   onEdit: (record: MaintenanceRecord) => void;
   onDelete: (id: string) => void;
   onComplete: (id: string) => void;
+  onNewMaintenance: () => void;
 }
 
-const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, onEdit, onDelete, onComplete }) => {
+const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, onEdit, onDelete, onComplete, onNewMaintenance }) => {
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
-  const [selectedTip, setSelectedTip] = useState<{id: string, text: string} | null>(null);
-  const [isLoadingTip, setIsLoadingTip] = useState(false);
 
   const filteredRecords = useMemo(() => {
     return records
@@ -30,16 +28,6 @@ const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, 
       .sort((a, b) => new Date(a.nextDate || '').getTime() - new Date(b.nextDate || '').getTime());
   }, [records, filter, search]);
 
-  const handleShowTip = async (e: React.MouseEvent, record: MaintenanceRecord) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (isLoadingTip) return;
-    setIsLoadingTip(true);
-    const tip = await getMaintenanceTips(record);
-    setSelectedTip({ id: record.id, text: tip });
-    setIsLoadingTip(false);
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <header className="flex flex-col md:flex-row justify-between gap-4">
@@ -47,7 +35,14 @@ const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, 
           <h2 className="text-2xl font-bold text-slate-800">Minhas Manutenções</h2>
           <p className="text-slate-500">Controle de tarefas ativas e preventivas.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button 
+            onClick={onNewMaintenance}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-xl shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <Icons.Plus className="w-5 h-5" />
+            Nova Manutenção
+          </button>
           <select value={filter} onChange={e => setFilter(e.target.value)} className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm outline-none shadow-sm focus:ring-2 focus:ring-blue-500">
             <option value="all">Todas Categorias</option>
             {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
@@ -97,13 +92,6 @@ const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, 
                 <div className="pt-4 border-t border-slate-50 flex items-center justify-between">
                   <div className="flex gap-1">
                     <button 
-                      onClick={(e) => handleShowTip(e, record)} 
-                      className="p-2.5 text-blue-500 hover:bg-blue-50 rounded-xl transition-colors"
-                      title="Dicas de IA"
-                    >
-                      <Icons.CheckCircle2 className={`w-5 h-5 ${isLoadingTip && selectedTip?.id === record.id ? 'animate-spin' : ''}`} />
-                    </button>
-                    <button 
                       onClick={(e) => { e.stopPropagation(); onEdit(record); }} 
                       className="p-2.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
                       title="Editar"
@@ -125,13 +113,6 @@ const MaintenanceList: React.FC<MaintenanceListProps> = ({ records, categories, 
                     Concluir
                   </button>
                 </div>
-
-                {selectedTip?.id === record.id && (
-                  <div className="mt-4 p-3 bg-blue-50 rounded-xl border border-blue-100 text-[11px] text-blue-700 animate-in zoom-in-95 leading-relaxed">
-                    <span className="font-bold block mb-1 uppercase text-[9px] tracking-widest text-blue-400">Sugestão TudoEmDia:</span>
-                    {selectedTip.text}
-                  </div>
-                )}
               </div>
             );
           })}
