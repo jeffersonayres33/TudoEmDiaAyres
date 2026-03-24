@@ -1,6 +1,7 @@
 
 export interface CategoryDefinition {
   id: string;
+  userId?: string;
   name: string;
   icon: string;
   color: string;
@@ -26,6 +27,7 @@ export interface MaintenanceNotification {
 
 export interface MaintenanceRecord {
   id: string;
+  userId?: string;
   name: string;
   category: string;
   lastDate: string;

@@ -7,24 +7,24 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  onNewMaintenance: () => void;
   notifications: MaintenanceNotification[];
   canInstall?: boolean;
   onInstall?: () => void;
   onBackup: () => void;
   onImport: () => void;
+  onLogout: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
   activeTab, 
   setActiveTab, 
-  onNewMaintenance, 
   notifications,
   canInstall,
   onInstall,
   onBackup,
-  onImport
+  onImport,
+  onLogout
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -93,6 +93,13 @@ const Layout: React.FC<LayoutProps> = ({
             >
               <Icons.Upload className="w-5 h-5 text-blue-500" />
               Restaurar Backup
+            </button>
+            <button
+              onClick={() => { onLogout(); setIsMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors mt-2"
+            >
+              <Icons.LogOut className="w-5 h-5" />
+              Sair da Conta
             </button>
           </div>
         </nav>

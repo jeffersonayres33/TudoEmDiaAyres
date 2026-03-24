@@ -1,0 +1,164 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: records
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required, immutable) - The ID of the owner
+    //   - name: string (required, max 100 chars) - Name of the task
+    //   - category: string (required, max 50 chars) - Category name
+    //   - periodicity: string (required, enum) - How often it repeats
+    //   - lastDate: string (required, max 30 chars) - ISO date string
+    //   - nextDate: string (optional, max 30 chars) - ISO date string
+    //   - status: string (required, enum) - 'pending' or 'completed'
+    //   - createdAt: string (required, immutable, max 30 chars) - ISO date string
+    //   - completedAt: string (optional, max 30 chars) - ISO date string
+    //   - notes: string (optional, max 1000 chars) - Additional notes
+    //   - cost: number (optional, >= 0) - Cost of maintenance
+    //   - notificationsEnabled: boolean (required) - Notifications toggle
+    //
+    // Collection: categories
+    // Document ID: auto-generated
+    // Fields:
+    //   - userId: string (required, immutable) - The ID of the owner
+    //   - name: string (required, max 50 chars) - Name of the category
+    //   - icon: string (required, max 50 chars) - Icon identifier
+    //   - color: string (required, max 50 chars) - Tailwind color class
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function uidUnchanged() {
+      return !('userId' in request.resource.data) ||
+        request.resource.data.userId == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('userId' in request.resource.data) ||
+        request.resource.data.userId == resource.data.userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    function validOptionalStringLength(field, minLen, maxLen) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is string &&
+         request.resource.data[field].size() >= minLen &&
+         request.resource.data[field].size() <= maxLen);
+    }
+
+    function validOptionalNumber(field, minVal) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is number &&
+         request.resource.data[field] >= minVal);
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function validOptionalList(field, maxSize) {
+      return !(field in request.resource.data) ||
+        (request.resource.data[field] is list &&
+         request.resource.data[field].size() <= maxSize);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidRecord(data) {
+      let allowedFields = ['id', 'userId', 'name', 'category', 'periodicity', 'lastDate', 'nextDate', 'status', 'createdAt', 'completedAt', 'description', 'cost', 'notificationsEnabled', 'attachments'];
+      let requiredFields = ['id', 'userId', 'name', 'category', 'periodicity', 'lastDate', 'status', 'createdAt', 'notificationsEnabled'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             hasRequiredFields(requiredFields) &&
+             validStringLength('id', 1, 128) &&
+             validStringLength('userId', 1, 128) &&
+             validStringLength('name', 1, 100) &&
+             validStringLength('category', 1, 50) &&
+             request.resource.data.periodicity in ['Nenhuma', 'Personalizado', '30 dias', '3 meses', '6 meses', '1 ano'] &&
+             validStringLength('lastDate', 1, 30) &&
+             validOptionalStringLength('nextDate', 1, 30) &&
+             request.resource.data.status in ['pending', 'completed', 'overdue'] &&
+             validStringLength('createdAt', 1, 30) &&
+             validOptionalStringLength('completedAt', 1, 30) &&
+             validOptionalStringLength('description', 0, 1000) &&
+             validOptionalNumber('cost', 0) &&
+             validOptionalList('attachments', 10) &&
+             request.resource.data.notificationsEnabled is bool;
+    }
+
+    function isValidCategory(data) {
+      let allowedFields = ['id', 'userId', 'name', 'icon', 'color'];
+      
+      return hasOnlyAllowedFields(allowedFields) &&
+             hasRequiredFields(allowedFields) &&
+             validStringLength('id', 1, 128) &&
+             validStringLength('userId', 1, 128) &&
+             validStringLength('name', 1, 50) &&
+             validStringLength('icon', 1, 50) &&
+             validStringLength('color', 1, 50);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /records/{recordId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                    isValidRecord(request.resource.data) && 
+                    uidUnchanged();
+      allow update: if isDocOwner() && 
+                    isValidRecord(request.resource.data) && 
+                    uidNotModified() &&
+                    areImmutableFieldsUnchanged(['createdAt']);
+      allow delete: if isDocOwner();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+                    isValidCategory(request.resource.data) && 
+                    uidUnchanged();
+      allow update: if isDocOwner() && 
+                    isValidCategory(request.resource.data) && 
+                    uidNotModified();
+      allow delete: if isDocOwner();
+    }
+  }
+}

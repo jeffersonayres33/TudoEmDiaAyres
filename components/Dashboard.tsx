@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
-import { MaintenanceRecord } from '../types';
+import { MaintenanceRecord, CategoryDefinition } from '../types';
 import { Icons, ICON_MAP } from '../constants';
-import { getDaysRemaining, formatDate, loadCategories } from '../utils/helpers';
+import { getDaysRemaining, formatDate } from '../utils/helpers';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
   PieChart, Pie
@@ -9,12 +9,11 @@ import {
 
 interface DashboardProps {
   records: MaintenanceRecord[];
+  categories: CategoryDefinition[];
   onComplete: (id: string) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ records, onComplete }) => {
-  const categories = useMemo(() => loadCategories(), []);
-  
+const Dashboard: React.FC<DashboardProps> = ({ records, categories, onComplete }) => {
   const activeRecords = useMemo(() => records.filter(r => r.status !== 'completed'), [records]);
 
   const stats = useMemo(() => {

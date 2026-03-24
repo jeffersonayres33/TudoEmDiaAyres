@@ -2,16 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { MaintenanceRecord, Periodicity, CategoryDefinition } from '../types';
 import { Icons } from '../constants';
-import { loadCategories } from '../utils/helpers';
 
 interface MaintenanceFormProps {
   onSave: (record: Partial<MaintenanceRecord>) => void;
   onCancel: () => void;
   initialData?: MaintenanceRecord | null;
+  categories: CategoryDefinition[];
 }
 
-const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSave, onCancel, initialData }) => {
-  const [categories, setCategories] = useState<CategoryDefinition[]>([]);
+const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSave, onCancel, initialData, categories }) => {
   const [formData, setFormData] = useState<Partial<MaintenanceRecord>>(
     initialData || {
       name: '',
@@ -28,17 +27,14 @@ const MaintenanceForm: React.FC<MaintenanceFormProps> = ({ onSave, onCancel, ini
   );
 
   useEffect(() => {
-    const cats = loadCategories();
-    setCategories(cats);
-    if (!formData.category && cats.length > 0) {
-      setFormData(prev => ({ ...prev, category: cats[0].name }));
+    if (!formData.category && categories.length > 0) {
+      setFormData(prev => ({ ...prev, category: categories[0].name }));
     }
-  }, []);
+  }, [categories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.lastDate || !formData.category) {
-      alert("Campos obrigatórios: Nome, Categoria e Data da Manutenção.");
       return;
     }
     onSave(formData);

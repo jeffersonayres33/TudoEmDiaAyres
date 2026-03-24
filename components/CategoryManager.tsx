@@ -15,6 +15,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, records, 
   const [editingCategory, setEditingCategory] = useState<CategoryDefinition | null>(null);
   const [name, setName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('Tag');
+  const [errorModal, setErrorModal] = useState<string | null>(null);
 
   const availableIcons = Object.keys(ICON_MAP);
 
@@ -60,7 +61,7 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, records, 
     e.preventDefault();
     e.stopPropagation();
     if (checkInUse(cat.name)) {
-      alert(`Não é possível excluir a categoria "${cat.name}" porque existem manutenções vinculadas a ela.`);
+      setErrorModal(`Não é possível excluir a categoria "${cat.name}" porque existem manutenções vinculadas a ela.`);
       return;
     }
     onDelete(cat.id);
@@ -68,6 +69,25 @@ const CategoryManager: React.FC<CategoryManagerProps> = ({ categories, records, 
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-300">
+      {errorModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-xs rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icons.AlertCircle className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 mb-2">Atenção</h3>
+              <p className="text-sm text-slate-500 mb-6">{errorModal}</p>
+              <button 
+                onClick={() => setErrorModal(null)}
+                className="w-full px-4 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 shadow-lg shadow-slate-200 transition-all active:scale-95 text-sm"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Categorias</h2>

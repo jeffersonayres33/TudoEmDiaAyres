@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "MaintenanceRecord": {
+      "title": "MaintenanceRecord",
+      "description": "A record of a maintenance task.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this record."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the maintenance task."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category of the maintenance task."
+        },
+        "periodicity": {
+          "type": "string",
+          "description": "How often the task should be performed.",
+          "enum": ["none", "custom", "30_days", "3_months", "6_months", "1_year"]
+        },
+        "lastDate": {
+          "type": "string",
+          "description": "The date the task was last performed (ISO string)."
+        },
+        "nextDate": {
+          "type": "string",
+          "description": "The date the task is next due (ISO string)."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the task.",
+          "enum": ["pending", "completed"]
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date the record was created (ISO string)."
+        },
+        "completedAt": {
+          "type": "string",
+          "description": "The date the task was completed (ISO string)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes about the task."
+        },
+        "cost": {
+          "type": "number",
+          "description": "The cost of the maintenance task."
+        },
+        "notificationsEnabled": {
+          "type": "boolean",
+          "description": "Whether notifications are enabled for this task."
+        }
+      },
+      "required": ["userId", "name", "category", "periodicity", "lastDate", "status", "createdAt", "notificationsEnabled"]
+    },
+    "CategoryDefinition": {
+      "title": "CategoryDefinition",
+      "description": "A custom category for maintenance tasks.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user who owns this category."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "icon": {
+          "type": "string",
+          "description": "The icon identifier for the category."
+        },
+        "color": {
+          "type": "string",
+          "description": "The color class for the category."
+        }
+      },
+      "required": ["userId", "name", "icon", "color"]
+    }
+  },
+  "firestore": {
+    "/records/{recordId}": {
+      "schema": {
+        "$ref": "#/entities/MaintenanceRecord"
+      },
+      "description": "Stores maintenance records for all users."
+    },
+    "/categories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/CategoryDefinition"
+      },
+      "description": "Stores custom categories for all users."
+    }
+  }
+}

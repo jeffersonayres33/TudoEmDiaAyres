@@ -29,7 +29,8 @@ import {
   Tag,
   Upload,
   Database,
-  Save
+  Save,
+  LogOut
 } from 'lucide-react';
 
 export const ICON_MAP: Record<string, any> = {
@@ -74,5 +75,6 @@ export const Icons = {
   ShieldCheck,
   Upload,
   Database,
-  Save
+  Save,
+  LogOut
 };
